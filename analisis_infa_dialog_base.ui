@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AnalisisInfaDialogBase</class>
+ <widget class="QDialog" name="AnalisisInfaDialogBase">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>414</width>
+    <height>695</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Analisis INFA</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="2" column="0">
+    <widget class="QTextEdit" name="textEdit"/>
+   </item>
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Datos de entrada</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="11" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Directorio de salida archivos .shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0">
+       <widget class="QgsFileWidget" name="ccaaFileWidget"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QgsFileWidget" name="gpxFileWidget"/>
+      </item>
+      <item row="19" column="0">
+       <widget class="QPushButton" name="procesarButton">
+        <property name="text">
+         <string>Procesar datos</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Archivo Excel</string>
+        </property>
+       </widget>
+      </item>
+      <item row="13" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Directorio de salida archivos .kmz</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Archivo GPX</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Capa CCAA en KMZ, obtenida desde Subpesca</string>
+        </property>
+       </widget>
+      </item>
+      <item row="15" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Selección de horario UTC (-3 verano, -4 invierno)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="17" column="0">
+      <widget class="QComboBox" name="utcComboBox">
+          <item>
+          <property name="text">
+              <string>-3</string>
+          </property>
+          </item>
+          <item>
+          <property name="text">
+              <string>-4</string>
+          </property>
+          </item>
+      </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Archivo Batimetría (.shp)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QgsFileWidget" name="excelFileWidget"/>
+      </item>
+      <item row="8" column="0">
+       <widget class="QgsFileWidget" name="batiFileWidget"/>
+      </item>
+      <item row="14" column="0">
+       <widget class="QgsFileWidget" name="dirsalidakmzFileWidget">
+        <property name="storageMode">
+         <enum>QgsFileWidget::GetDirectory</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="0">
+       <widget class="QgsFileWidget" name="dirsalidashpFileWidget">
+        <property name="storageMode">
+         <enum>QgsFileWidget::GetDirectory</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="18" column="0">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_9">
+     <property name="text">
+      <string>Mensajes</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsFileWidget</class>
+   <extends>QWidget</extends>
+   <header>qgsfilewidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/plugins/analisis_infa" >
+        <file>icon.png</file>
+        <file>files/icono_mo.png</file>
+        <file>files/icono_ox.png</file>
+        <file>files/icono_wpt_terreno.png</file>
+        <file>files/icono_wpt_otro.png</file>
+    </qresource>
+</RCC>
