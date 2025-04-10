@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/analisis_infa" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
