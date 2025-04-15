@@ -1,37 +1,92 @@
-# CHONQUE DEL MONTE
+# Análisis INFA - Plugin para QGIS
 ![Chonque del Monte](/static/img/LOGO.png)
 
-# QGIS Plugin para análisis de datos de INFAS obtenidos en terreno, utilizando PyQT5 y qgis.core
-
-Este repositorio contiene un plugin para uso en QGIS 3.36 o superior, que toma datos obtenidos en terreno y crea archivos .shp (shapefile) y .kmz (para Google Earth), a fin de efectuar análisis sobre estos últimos. El framework base es PyQT5 y corre a través de la API de QGIS a través de qgis.core
-
 ## Descripción general
-Este plugin está diseñado para tomar como inputs diferentes archivos resultantes de muestreo en terreno por parte de una consultora externa para dar cumplimiento a la ejecución de INFA (Informe Ambiental de la Acuicultura) en centros de cultivo, para luego efectuar análisis sobre los archivos que entrega el plugin. El uso del mismo está irrestrictamente unido a cualquier versión de QGIS superior a la 3.36, ya que funciona al interior de éste. 
 
-### Características principales
+El plugin "Análisis INFA" es una herramienta especializada para QGIS diseñada para procesar y analizar datos recolectados en terreno durante la ejecución de Informes Ambientales de la Acuicultura (INFA). Desarrollado específicamente para profesionales del sector acuícola y ambiental, este plugin transforma datos crudos de monitoreo en archivos geoespaciales analizables (.shp, .kmz), facilitando la evaluación de impacto ambiental en centros de cultivo acuícola.
 
-- **QGIS** Software de información geográfica (SIG) que es la base de procesamiento sobre la cual trabaja el plugin.
-- **PyQT5** Framework sobre el cual se ejecutan los geoprocesos.
-- **qgis.core** API interna de QGIS para trabajar con geometrías vectoriales
+## Características principales
 
-### Pre requisitos
+- **Procesamiento de múltiples tipos de datos**: Manejo de estaciones de muestreo MO (materia orgánica), estaciones OX (oxígeno), transectas, módulos, tracks GPS, waypoints y datos batimétricos.
+- **Transformación de coordenadas**: Conversión automática entre sistemas de coordenadas UTM y geográficas.
+- **Generación de archivos Shapefile**: Creación de capas vectoriales con tablas de atributos estructuradas para análisis en QGIS.
+- **Exportación a KMZ**: Generación de archivos compatibles con Google Earth para visualización 3D con simbología personalizada.
+- **Interfaz integrada**: Totalmente integrado con la interfaz de QGIS, proporcionando una experiencia de usuario fluida.
+- **Validación de datos**: Verificación automática de la integridad y consistencia de los datos de entrada.
 
-- QGIS 3.36 o superior
+## Requisitos del sistema
+
+- QGIS 3.32 o superior
+- Dependencias externas:
+  - openpyxl (procesamiento de archivos Excel)
+  - et-xmlfile (manejo de XML)
+- Sistema operativo: Compatible con Windows, MacOS y Linux (cualquier SO que soporte QGIS 3.32+)
+- Memoria RAM: Mínimo 4GB recomendado
 
 ## Instalación
 
-Se debe instalar como archivo comprimido dentro de QGIS en: complementos -> administrar o instalar complementos -> Instalar a partir de zip.
+1. Abrir QGIS
+2. Ir a "Complementos" → "Administrar e instalar complementos..."
+3. Seleccionar la pestaña "Instalar a partir de ZIP"
+4. Navegar y seleccionar el archivo ZIP del plugin
+5. Hacer clic en "Instalar complemento"
+6. Una vez instalado, el ícono del plugin aparecerá en la barra de herramientas de QGIS
 
-## Uso
+## Uso básico
 
-Se deben cargar todos los archivos necesarios para le ejecución del plugin, una vez procesados los datos los archivos resultantes estarán en las carpetas indicadas como parámetros.
+1. **Iniciar el plugin**: Hacer clic en el ícono del plugin en la barra de herramientas de QGIS
+2. **Configurar parámetros**:
+   - Seleccionar los archivos de entrada (Excel con datos de estaciones, archivos GPX de tracks, etc.)
+   - Definir directorios de salida para archivos shapefile (.shp) y Google Earth (.kmz)
+   - Configurar el offset UTC si es necesario para los datos temporales
+3. **Procesar datos**: Hacer clic en "Procesar" para iniciar la transformación de datos
+4. **Visualizar resultados**: Los archivos generados se cargarán automáticamente en el proyecto QGIS actual
 
-## A tener en consideración
+## Módulos disponibles
 
-Versión 1.0, puede contener muchos errores debido a lo amplio y diverso de los análisis efectuados, además de error humano en la toma de los datos originales.
+El plugin incluye varios módulos especializados:
 
-## ToDo:
+| Módulo | Descripción |
+|--------|-------------|
+| Estaciones MO | Procesa datos de muestreo de materia orgánica en sedimentos |
+| Estaciones OX | Analiza mediciones de oxígeno en la columna de agua |
+| Transectas | Procesa líneas de muestreo utilizadas en evaluaciones ambientales |
+| Módulos | Gestiona información sobre módulos de cultivo |
+| Track GPX | Procesa rutas GPS grabadas durante los muestreos |
+| Waypoints | Maneja puntos de interés marcados durante el trabajo de campo |
+| Batimetría | Procesa datos de profundidad para generar modelos batimétricos |
 
-- Añadir manual de uso
-- Mejorar lógica de algunos procesos
-- Mejorar explicaciones de instalación
+## Flujo de trabajo recomendado
+
+1. Recolección de datos en terreno (GPS, mediciones ambientales, muestras)
+2. Organización de datos en las plantillas Excel predefinidas
+3. Procesamiento con el plugin Análisis INFA
+4. Análisis geoespacial de resultados en QGIS
+5. Exportación a Google Earth para visualización tridimensional
+6. Generación de informes y documentación técnica
+
+## Solución de problemas comunes
+
+- **Error al cargar archivos Excel**: Verifique que el formato de las hojas de cálculo corresponda con las plantillas requeridas.
+- **Coordenadas incorrectas**: Asegúrese de que el huso UTM esté correctamente especificado en los datos de entrada.
+- **Archivos KMZ no visibles**: Compruebe que los estilos e íconos estén correctamente referenciados en la carpeta del plugin.
+
+## Desarrollo futuro
+
+- Concentración de todos los exports en un solo archivo KMZ comprensivo
+- Incorporación de mapas base en las exportaciones KMZ
+- Soporte para transformación directa de archivos .gdb a .gpx
+- Mejoras en la validación de datos y manejo de errores
+- Implementación de generación automática de informes PDF
+
+## Información legal y técnica
+
+- **Autor**: Manuel Eduardo Cano Nesbet
+- **Licencia**: GNU General Public License v2
+- **Versión actual**: 1.1
+- **Contacto**: mcano@sernapesca.cl
+- **Repositorio**: [https://github.com/Traukit0/analisis_infa](https://github.com/Traukit0/analisis_infa)
+
+---
+
+*Este plugin está diseñado específicamente para uso profesional en el análisis ambiental de la acuicultura en Chile. Los resultados deben ser interpretados por personal calificado en el contexto de la normativa ambiental vigente.*
