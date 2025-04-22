@@ -21,73 +21,44 @@ from qgis.core import (
 
 def cargar_capa_batimetria(batimetria_shp, plugin_instance):
     """Carga y estiliza la capa de batimetría"""
-    # Crear capa temporal con CRS correcto
-    temp_dir = os.path.dirname(batimetria_shp)
-    temp_file = os.path.join(temp_dir, "temp_batimetria.shp")
-    
     # Cargar capa original
-    original_layer = QgsVectorLayer(batimetria_shp, "temp", "ogr")
+    original_layer = QgsVectorLayer(batimetria_shp, "Batimetria", "ogr")
     if not original_layer.isValid():
         plugin_instance.mensajes_texto_plugin("No pudo cargarse la capa 'Batimetria' en QGIS")
         return None
 
-    # Configurar la transformación y guardado
+    # Configurar proyecto y CRS
+    project = QgsProject.instance()
     target_crs = QgsCoordinateReferenceSystem("EPSG:32718")
-    options = QgsVectorFileWriter.SaveVectorOptions()
-    options.driverName = "ESRI Shapefile"
-    options.fileEncoding = "UTF-8"
+    project.setCrs(target_crs)
     
     # Si la capa original no está en EPSG:32718, configurar transformación
     if original_layer.crs().authid() != "EPSG:32718":
-        options.ct = QgsCoordinateTransform(
+        # Crear transformación de coordenadas
+        transform = QgsCoordinateTransform(
             original_layer.crs(),
             target_crs,
-            QgsProject.instance()
+            project
         )
-
-    # Crear capa temporal con el CRS correcto
-    error = QgsVectorFileWriter.writeAsVectorFormatV3(
-        original_layer,
-        temp_file,
-        QgsCoordinateTransformContext(),
-        options
-    )
-
-    if error[0] != QgsVectorFileWriter.NoError:
-        plugin_instance.mensajes_texto_plugin(f"Error al transformar capa: {error[1]}")
-        return None
-
-    # Cargar la capa temporal
-    layer = QgsVectorLayer(temp_file, "Batimetria", "ogr")
-    if not layer.isValid():
-        plugin_instance.mensajes_texto_plugin("Error al cargar capa transformada")
-        return None
-
-    # Configurar proyecto y capa
-    project = QgsProject.instance()
-    project.setCrs(target_crs)
-    
+        # Aplicar transformación al proyecto
+        project.transformContext().addCoordinateOperation(
+            original_layer.crs(),
+            target_crs, 
+            transform.coordinateOperation()
+        )
+        
     # Aplicar estilo QML
     plugin_dir = Path(__file__).parent
     qml_path = plugin_dir / 'estilos_qml' / 'Estilo Batimetria.qml'
     
     if qml_path.exists():
-        layer.loadNamedStyle(str(qml_path))
-        layer.triggerRepaint()
+        original_layer.loadNamedStyle(str(qml_path))
+        original_layer.triggerRepaint()
     
-    # Agregar capa y limpiar
-    project.addMapLayer(layer)
+    # Agregar capa al proyecto
+    project.addMapLayer(original_layer)
     
-    # Limpiar archivos temporales después de cargar
-    try:
-        for ext in ['.shp', '.shx', '.dbf', '.prj']:
-            temp = temp_file.replace('.shp', ext)
-            if os.path.exists(temp):
-                os.remove(temp)
-    except:
-        pass
-    
-    return layer
+    return original_layer
 
 def generar_line_strings(coords, transform):
     """Genera los LineStrings para un conjunto de coordenadas"""
@@ -174,22 +145,18 @@ def crear_placemark(feat, coords, transformer, placemark_id, schema):
 def batimetria_kmz(batimetria_shp, directorio_salida_kmz, plugin_instance):
     """Procesa archivo de batimetría y genera KMZ"""
     # Verificar y cargar capa
-    capa_shp = QgsVectorLayer(batimetria_shp, "capa_shp", "ogr")
-    if not capa_shp.isValid():
+    capa = QgsVectorLayer(batimetria_shp, "capa_shp", "ogr")
+    if not capa.isValid():
         plugin_instance.mensajes_texto_plugin(f"Error al cargar la capa {batimetria_shp}")
         return
 
-    # Establecer CRS
-    source_crs = QgsCoordinateReferenceSystem("EPSG:32718")
-    capa_shp.setCrs(source_crs)
-
-    # Cargar capa en QGIS
-    capa_transformada = cargar_capa_batimetria(batimetria_shp, plugin_instance)
-    if not capa_transformada:
+    # Cargar capa en QGIS con el CRS correcto
+    layer = cargar_capa_batimetria(batimetria_shp, plugin_instance)
+    if not layer:
         return
 
     # Detectar esquema de campos
-    schema = detect_schema(capa_transformada)
+    schema = detect_schema(layer)
     if not schema:
         plugin_instance.mensajes_texto_plugin("Error: Formato de campos no reconocido en el archivo de batimetría")
         return
@@ -201,7 +168,7 @@ def batimetria_kmz(batimetria_shp, directorio_salida_kmz, plugin_instance):
 
     # Generar placemarks
     placemarks = []
-    for idx, feat in enumerate(capa_transformada.getFeatures(), 1):
+    for idx, feat in enumerate(layer.getFeatures(), 1):
         coords = feat.geometry().asMultiPolyline()
         placemark = crear_placemark(feat, coords, transform, idx, schema)
         placemarks.append(placemark)
