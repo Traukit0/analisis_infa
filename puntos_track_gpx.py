@@ -288,9 +288,9 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
         kml_base = '''<?xml version="1.0" encoding="UTF-8"?>
         <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
             <Document>
-                <name>Track Puntos</name>
+                <name>{nombre_kmz}</name>
                 <Folder>
-                    <name>Track Puntos</name>
+                    <name>{nombre_kmz}</name>
                     <Style id="0">
                         <IconStyle>
                             <color>7effffff</color>
@@ -360,8 +360,12 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
             )
             placemarks += placemark
 
+        # La generación del nombre se movió acá para arreglar como se construye el kml
+        nombre_base = nombrar_archivo(archivo_excel) # para construir la primera mitad del nombre
+        nombre_kmz = f"{nombre_base} Track Ptos" # Acá se termina de construir el nombre completo
+
         # Generar el contenido final del KML
-        kml_content = kml_base.format(placemarks=placemarks)
+        kml_content = kml_base.format(placemarks=placemarks, nombre_kmz=nombre_kmz)
 
         # Asegurar que el directorio de salida termine con separador
         if not directorio_salida_kmz.endswith('/') and not directorio_salida_kmz.endswith('\\'):
@@ -372,11 +376,7 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
         icono_track_ptos = os.path.join(plugin_dir, 'files', 'icono_pto_track_utc.png')
 
         # Crear archivos temporales y KMZ final
-        nombre_base = nombrar_archivo(archivo_excel) # para construir la primera mitad del nombre
-        print(nombre_base)
-        nombre_kmz = f"{nombre_base} Track Ptos" # Acá se termina de construir el nombre completo
-        print(nombre_kmz)
-        kml_temp = os.path.normpath(f"{directorio_salida_kmz}{nombre_kmz}.kml")
+        kml_temp = os.path.normpath(f"{directorio_salida_kmz}doc.kml")
         kmz_final = os.path.normpath(f"{directorio_salida_kmz}{nombre_kmz}.kmz")
 
         # Escribir KML temporal
@@ -385,7 +385,7 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
 
         # Crear archivo KMZ
         with zipfile.ZipFile(kmz_final, 'w') as kmz:
-            kmz.write(kml_temp, arcname=f"{nombre_kmz}.kml")
+            kmz.write(kml_temp, arcname="doc.kml")
             kmz.write(icono_track_ptos, arcname="files/icono_pto_track_utc.png")
 
         # Eliminar KML temporal

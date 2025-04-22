@@ -357,7 +357,7 @@ def crear_segmentos_track(archivo_excel: str, directorio_salida_shp: str,
         )
         
         # Guardar el contenido KML en un archivo
-        kml_filename = f"{directorio_salida_kmz}{nombre_kmz}.kml"
+        kml_filename = f"{directorio_salida_kmz}doc.kml"
         with open(kml_filename, 'w') as file:
             file.write(kml_content)   
 

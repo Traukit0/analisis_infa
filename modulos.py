@@ -25,7 +25,7 @@ def procesar_datos_desde_excel(archivo_excel):
     try:
         df = pd.read_excel(archivo_excel, sheet_name='Modulos')
         if df.empty:
-            return None, "No hay datos de módulos en el archivo Excel"
+            return None, "\nNo hay datos de módulos en el archivo Excel"
         
         # Asegurar formato de fecha
         if 'Fecha' in df.columns:
@@ -162,7 +162,7 @@ def generar_kmz(polygons, directorio_salida, nombre_archivo):
     )
     
     # Crear archivo KMZ
-    kmz_path = Path(directorio_salida) / "Modulos Area.kmz"
+    kmz_path = Path(directorio_salida) / f"{nombre_archivo} Modulos Area.kmz"
     try:
         with zipfile.ZipFile(kmz_path, 'w', zipfile.ZIP_DEFLATED) as kmz:
             kmz.writestr("doc.kml", kml_content)
