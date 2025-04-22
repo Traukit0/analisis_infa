@@ -244,5 +244,3 @@ def ccaa_a_kmz(archivo_excel, directorio_salida_shp, directorio_salida_kmz, plug
     if not kmz_path:
         plugin_instance.mensajes_texto_plugin("Error al generar archivo KMZ de CCAA")
         return
-    
-    plugin_instance.mensajes_texto_plugin("Procesamiento de CCAA completado exitosamente")

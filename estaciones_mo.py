@@ -315,16 +315,12 @@ def estaciones_mo(archivo_excel, directorio_salida_shp, directorio_salida_kmz, p
     QgsProject.instance().addMapLayer(capa_guardada)
 
     # Generación KMZ
-    kmz_path = generar_kmz(
+    generar_kmz(
         df,
         directorio_salida_kmz,
         nombre_base,
         str(plugin_dir)
     )
-    
-    mensaje = f"""
-    Proceso completado exitosamente:
-    - Shapefile generado: {shp_path}
-    - Archivo KMZ generado: {kmz_path}
-    """
-    plugin_instance.mensajes_texto_plugin(mensaje)
+
+    plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_base} Estaciones MO Ptos.shp creado")
+    plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_base} Estaciones MO Ptos.kmz creado")

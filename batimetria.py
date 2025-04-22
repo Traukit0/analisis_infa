@@ -186,7 +186,7 @@ def batimetria_kmz(batimetria_shp, directorio_salida_kmz, plugin_instance):
     try:
         with zipfile.ZipFile(kmz_path, 'w', zipfile.ZIP_DEFLATED) as kmz:
             kmz.writestr("doc.kml", kml_content)
-        plugin_instance.mensajes_texto_plugin(f"\nArchivo Batimetria.kmz creado")
+        plugin_instance.mensajes_texto_plugin(f"Archivo Batimetria.kmz creado")
     except Exception as e:
         plugin_instance.mensajes_texto_plugin(f"Error creando KMZ: {str(e)}")
 
