@@ -212,7 +212,7 @@ def extraer_waypoints(gpx_path, archivo_excel, directorio_salida_shp, directorio
         transform_context,
         options
     )
-
+    plugin_instance.mensajes_texto_plugin(f"Archivo {nombrar_archivo(archivo_excel)} Waypoints Ptos.shp creado")
     # Lógica añadida para cargar capa .shp directamente a QGIS
     layer = QgsVectorLayer(wpt_ptos_shp, f"{nombrar_archivo(archivo_excel)} Waypoints Ptos.shp", "ogr")
     if not layer.isValid():
@@ -327,16 +327,19 @@ def crear_kmz_terreno_desde_shp(wpt_ptos_shp, archivo_excel, directorio_salida, 
             plugin_instance.mensajes_texto_plugin("\nNo se encontraron waypoints de terreno")
             return
 
+        nombre_temp = nombrar_archivo(archivo_excel)
+        nombre_kmz_terreno = f"{nombre_temp} Waypoints Ptos Terreno.kmz"
+
         kml_content = kml_base.format(
             nombre="Waypoints Ptos Terreno",
             placemarks='\n'.join(placemarks)
         )
 
         icon_path = get_icon_path(plugin_dir, 'icono_wpt_terreno.png')
-        kmz_path = f"{directorio_salida}Waypoints Ptos Terreno.kmz"
+        kmz_path = f"{directorio_salida}{nombre_kmz_terreno}"
         
         if create_kmz_file(kml_content, kmz_path, icon_path, 'icono_wpt_terreno.png'):
-            plugin_instance.mensajes_texto_plugin("\nArchivo KMZ de waypoints terreno creado exitosamente")
+            plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_kmz_terreno} creado")
         else:
             plugin_instance.mensajes_texto_plugin("\nError al crear archivo KMZ de waypoints terreno")
 
@@ -404,16 +407,19 @@ def crear_kmz_otro_desde_shp(wpt_ptos_shp, archivo_excel, directorio_salida, plu
             plugin_instance.mensajes_texto_plugin("\nNo se encontraron waypoints otros")
             return
 
+        nombre_temp = nombrar_archivo(archivo_excel)
+        nombre_kmz_otros = f"{nombre_temp} Waypoints Ptos Otros.kmz"
+
         kml_content = kml_base.format(
             nombre="Waypoints Ptos Otros",
             placemarks='\n'.join(placemarks)
         )
 
         icon_path = get_icon_path(plugin_dir, 'icono_wpt_otro.png')
-        kmz_path = f"{directorio_salida}Waypoints Ptos Otros.kmz"
+        kmz_path = f"{directorio_salida}{nombre_kmz_otros}"
         
         if create_kmz_file(kml_content, kmz_path, icon_path, 'icono_wpt_otro.png'):
-            plugin_instance.mensajes_texto_plugin("\nArchivo KMZ de waypoints otros creado exitosamente")
+            plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_kmz_otros} creado")
         else:
             plugin_instance.mensajes_texto_plugin("\nError al crear archivo KMZ de waypoints otros")
 
