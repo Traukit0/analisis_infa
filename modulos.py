@@ -157,7 +157,7 @@ def generar_kmz(polygons, directorio_salida, nombre_archivo):
             continue
     
     kml_content = get_kml_base().format(
-        nombre="Modulos Area",
+        nombre=f"{nombre_archivo} Modulos Area",
         placemarks="\n".join(placemarks)
     )
     
@@ -254,8 +254,11 @@ def modulos(archivo_excel, directorio_salida_shp, directorio_salida_kmz, plugin_
     guardar_y_cargar_capa(capa_poligonos, shp_path, "Estilo INFA Modulo Area.qml", plugin_instance)
     
     # Generar KMZ
-    kmz_path = generar_kmz(polygons, directorio_salida_kmz, nombre_base)
-    if not kmz_path:
+    try:
+        generar_kmz(polygons, directorio_salida_kmz, nombre_base)
+        plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_base} Modulos Area.shp creado")
+        plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_base} Modulos Area.kmz creado")
+    except:
         plugin_instance.mensajes_texto_plugin("Error generando archivo KMZ")
 
 def guardar_y_cargar_capa(capa, shp_path, estilo_qml, plugin_instance):
