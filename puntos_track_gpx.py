@@ -252,6 +252,8 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
             options
         )
 
+        plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_archivo} Track Ptos.shp creado")
+
         # Lógica añadida para cargar capa .shp directamente a QGIS
         layer = QgsVectorLayer(nombre_archivo_shp, f"{nombre_archivo} Track Ptos.shp", "ogr")
         if not layer.isValid():
@@ -370,7 +372,10 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
         icono_track_ptos = os.path.join(plugin_dir, 'files', 'icono_pto_track_utc.png')
 
         # Crear archivos temporales y KMZ final
-        nombre_kmz = "Track Ptos"
+        nombre_base = nombrar_archivo(archivo_excel) # para construir la primera mitad del nombre
+        print(nombre_base)
+        nombre_kmz = f"{nombre_base} Track Ptos" # Acá se termina de construir el nombre completo
+        print(nombre_kmz)
         kml_temp = os.path.normpath(f"{directorio_salida_kmz}{nombre_kmz}.kml")
         kmz_final = os.path.normpath(f"{directorio_salida_kmz}{nombre_kmz}.kmz")
 
@@ -385,7 +390,7 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
 
         # Eliminar KML temporal
         os.remove(kml_temp)
-
+        plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_kmz}.kmz creado")
         return nombre_archivo_shp
         
     except Exception as e:
