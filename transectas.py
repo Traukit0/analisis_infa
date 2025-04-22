@@ -290,7 +290,7 @@ def transectas(archivo_excel: str, directorio_salida_shp: str, directorio_salida
         transformer = Transformer.from_crs(EPSG_SOURCE, EPSG_TARGET, always_xy=True)
         kml_content = create_kml_content(df, transformer)
         
-        kmz_path = Path(directorio_salida_kmz) / "Transectas Linea"
+        kmz_path = Path(directorio_salida_kmz) / f"{nombre_archivo} Transectas Linea"
         with open(f"{kmz_path}.kml", 'w') as file:
             file.write(kml_content)
             
