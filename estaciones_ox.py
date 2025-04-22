@@ -239,4 +239,7 @@ def estaciones_ox(archivo_excel, directorio_salida_shp, directorio_salida_kmz, p
     # Generar KMZ
     kmz_path = generar_kmz(df, directorio_salida_kmz, nombre_base, plugin_dir)
     if not kmz_path:
-        plugin_instance.mensajes_texto_plugin("Error generando archivo KMZ")
+        plugin_instance.mensajes_texto_plugin(f"Error generando archivo {nombre_base} Estaciones OX Ptos.kmz")
+
+    plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_base} Estaciones OX Ptos.shp creado")
+    plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_base} Estaciones OX Ptos.kmz creado")
