@@ -161,6 +161,8 @@ def crear_segmentos_track(archivo_excel: str, directorio_salida_shp: str,
             QgsCoordinateTransformContext(),
             options)
 
+        plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_archivo} creado")
+
         # Cargar capa en QGIS
         layer = QgsVectorLayer(nombre_track_segmentos_shp, nombre_archivo, "ogr")
         if not layer.isValid():
@@ -346,7 +348,8 @@ def crear_segmentos_track(archivo_excel: str, directorio_salida_shp: str,
             directorio_salida_kmz += '/'
 
         # Nombre archivo KMZ
-        nombre_kmz = "Track Segmentos" 
+        nombre_temp = nombrar_archivo(archivo_excel)
+        nombre_kmz = f"{nombre_temp} Track Segmentos" 
 
         kml_content = kml_base.format(
             nombre=nombre_kmz,
@@ -365,7 +368,7 @@ def crear_segmentos_track(archivo_excel: str, directorio_salida_shp: str,
             
         # Borrar archivo .kml ya que es innecesario, solo sirve el KMZ
         os.remove(kml_filename)
-
+        plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_kmz}.kmz creado")
         # No return needed here - successful execution
 
     except Exception as e:
