@@ -270,19 +270,22 @@ def crear_kmz_terreno_desde_shp(wpt_ptos_shp, archivo_excel, directorio_salida, 
     <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
         <Document>
             <name>{nombre}</name>
-            <Style id="waypoint_terreno">
-                <IconStyle>
-                    <scale>0.453543</scale>
-                    <Icon>
-                        <href>files/icono_wpt_terreno.png</href>
-                    </Icon>
-                </IconStyle>
-                <LabelStyle>
-                    <color>ffffaa00</color>
-                    <scale>0.7</scale>
-                </LabelStyle>
-            </Style>
-            {placemarks}
+            <Folder>
+                <name>{nombre}</name>
+                <Style id="waypoint_terreno">
+                    <IconStyle>
+                        <scale>0.453543</scale>
+                        <Icon>
+                            <href>files/icono_wpt_terreno.png</href>
+                        </Icon>
+                    </IconStyle>
+                    <LabelStyle>
+                        <color>ffffaa00</color>
+                        <scale>0.7</scale>
+                    </LabelStyle>
+                </Style>
+                {placemarks}
+            </Folder>
         </Document>
     </kml>'''
 
@@ -331,7 +334,7 @@ def crear_kmz_terreno_desde_shp(wpt_ptos_shp, archivo_excel, directorio_salida, 
         nombre_kmz_terreno = f"{nombre_temp} Waypoints Ptos Terreno.kmz"
 
         kml_content = kml_base.format(
-            nombre="Waypoints Ptos Terreno",
+            nombre=f"{nombre_temp} Wpt Ptos Terreno",
             placemarks='\n'.join(placemarks)
         )
 
@@ -354,19 +357,22 @@ def crear_kmz_otro_desde_shp(wpt_ptos_shp, archivo_excel, directorio_salida, plu
     <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
         <Document>
             <name>{nombre}</name>
-            <Style id="waypoint_otro">
-                <IconStyle>
-                    <scale>0.453543</scale>
-                    <Icon>
-                        <href>files/icono_wpt_otro.png</href>
-                    </Icon>
-                </IconStyle>
-                <LabelStyle>
-                    <color>ff00aaff</color>
-                    <scale>0.7</scale>
-                </LabelStyle>
-            </Style>
-            {placemarks}
+            <Folder>
+                <name>{nombre}</name>
+                <Style id="waypoint_otro">
+                    <IconStyle>
+                        <scale>0.453543</scale>
+                        <Icon>
+                            <href>files/icono_wpt_otro.png</href>
+                        </Icon>
+                    </IconStyle>
+                    <LabelStyle>
+                        <color>ff00aaff</color>
+                        <scale>0.7</scale>
+                    </LabelStyle>
+                </Style>
+                {placemarks}
+            </Folder>
         </Document>
     </kml>'''
 
@@ -411,7 +417,7 @@ def crear_kmz_otro_desde_shp(wpt_ptos_shp, archivo_excel, directorio_salida, plu
         nombre_kmz_otros = f"{nombre_temp} Waypoints Ptos Otros.kmz"
 
         kml_content = kml_base.format(
-            nombre="Waypoints Ptos Otros",
+            nombre=f"{nombre_temp} Wpt Ptos Otros",
             placemarks='\n'.join(placemarks)
         )
 
