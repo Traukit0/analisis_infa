@@ -298,6 +298,9 @@ def transectas(archivo_excel: str, directorio_salida_shp: str, directorio_salida
             kmz.write(f"{kmz_path}.kml")
             
         remove(f"{kmz_path}.kml")
+
+        plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_archivo} Transectas.shp creado")
+        plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_archivo} Transectas.kmz creado")        
         
     except Exception as e:
         plugin_instance.mensajes_texto_plugin(f"\nError procesando transectas: {str(e)}")
