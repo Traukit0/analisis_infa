@@ -80,10 +80,9 @@ def extraer_waypoints(gpx_path, archivo_excel, directorio_salida_shp, directorio
         elevation = feat['elevation']
         
         # Intentar obtener el tiempo desde el archivo GPX original
-        tree = ET.parse(gpx_path)
-        print(tree)
+        with open(gpx_path, 'rb') as archivo_gpx:
+            tree = ET.parse(archivo_gpx)        
         root = tree.getroot()
-        print(root)
         
         # Buscar el waypoint correspondiente por nombre
         ns = {'gpx': 'http://www.topografix.com/GPX/1/1'}

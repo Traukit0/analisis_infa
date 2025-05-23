@@ -120,12 +120,27 @@ def crear_segmentos_track(archivo_excel: str, directorio_salida_shp: str,
 
         nombre_capa_shp = os.path.normpath(f"{directorio_salida_shp}{nombrar_archivo(archivo_excel)} Track Ptos.shp")
         
+        # Verificar si el archivo existe antes de intentar cargarlo
+        if not os.path.exists(nombre_capa_shp):
+            mensaje = f"\nsegmentos_track.crear_segmentos_track: Archivo de puntos no encontrado: {nombre_capa_shp}"
+            plugin_instance.mensajes_texto_plugin(mensaje)
+            return None
+        
         # Cargar capa de puntos
         layer = QgsVectorLayer(nombre_capa_shp, "puntos", "ogr")
         if not layer.isValid():
             mensaje = f"\nsegmentos_track.crear_segmentos_track: Error al cargar la capa: {nombre_capa_shp}"
             plugin_instance.mensajes_texto_plugin(mensaje)
             return None
+
+        # Verificar que la capa tenga features
+        feature_count = layer.featureCount()
+        if feature_count == 0:
+            mensaje = f"\nsegmentos_track.crear_segmentos_track: La capa de puntos está vacía: {nombre_capa_shp}"
+            plugin_instance.mensajes_texto_plugin(mensaje)
+            return None
+            
+        plugin_instance.mensajes_texto_plugin(f"Capa de puntos cargada exitosamente con {feature_count} features")
 
         # Preparar capa de salida
         fields = QgsFields()

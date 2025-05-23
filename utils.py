@@ -23,35 +23,42 @@ def nombrar_archivo(archivo_excel):
     y construye la mitad del nombre genérico para .shp y .kmz
     Se intenta llegar a una función general para todos los archivos.
     """
-    # Leer el archivo Excel
-    archivo_a_analizar = pd.ExcelFile(archivo_excel)
-    hojas_libro = archivo_a_analizar.sheet_names
-    df = None
-    for hoja in hojas_libro:
-        try:
-            df_temp = pd.read_excel(archivo_excel, sheet_name=hoja)
-            if not df_temp.empty:
-                df = df_temp
-                break
-        except ValueError:
-            continue
-    
-    # Si no se encuentra ninguna hoja con datos, levantar excepción:
-    if df is None:
-        raise ValueError("""No se encontraron hojas con datos en el archivo Excel.
-                         Es probable que el libro esté en blanco o las hojas no
-                         contengan el nombre correcto""")
+    # Leer el archivo Excel con context manager para asegurar cierre correcto
+    archivo_a_analizar = None
+    try:
+        archivo_a_analizar = pd.ExcelFile(archivo_excel)
+        hojas_libro = archivo_a_analizar.sheet_names
+        df = None
+        for hoja in hojas_libro:
+            try:
+                # Usar el ExcelFile directamente sin abrir nuevas conexiones
+                df_temp = archivo_a_analizar.parse(hoja)
+                if not df_temp.empty:
+                    df = df_temp
+                    break
+            except ValueError:
+                continue
+        
+        # Si no se encuentra ninguna hoja con datos, levantar excepción:
+        if df is None:
+            raise ValueError("""No se encontraron hojas con datos en el archivo Excel.
+                             Es probable que el libro esté en blanco o las hojas no
+                             contengan el nombre correcto""")
 
-    # Convención de nombres de archivo y otros datos
-    centro = str(df['Centro'].unique()[0])
-    fecha_string = str(df['Fecha'].unique()[0])
-    fecha_lista = fecha_string.split()
-    anio = str(fecha_lista[0]).split("-")[0]
-    mes = str(fecha_lista[0]).split("-")[1]
-    # Para transformar el mes a la convención de nomenclatura de archivo
-    meses = {'01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr', '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Ago', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dic'}
-    nombre_archivo = f"{centro} INFA {anio} {meses[mes]}"
-    return nombre_archivo
+        # Convención de nombres de archivo y otros datos
+        centro = str(df['Centro'].unique()[0])
+        fecha_string = str(df['Fecha'].unique()[0])
+        fecha_lista = fecha_string.split()
+        anio = str(fecha_lista[0]).split("-")[0]
+        mes = str(fecha_lista[0]).split("-")[1]
+        # Para transformar el mes a la convención de nomenclatura de archivo
+        meses = {'01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr', '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Ago', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dic'}
+        nombre_archivo = f"{centro} INFA {anio} {meses[mes]}"
+        return nombre_archivo
+    finally:
+        # Cerrar explícitamente el archivo Excel
+        if archivo_a_analizar is not None:
+            archivo_a_analizar.close()
 
 def obtener_segundos(seg_ini, seg_fin):
     """
@@ -246,33 +253,42 @@ def obtener_dia_muestreo(archivo_excel):
     return:
         - Día cuando se ejecutó el muestreo casteada int para calculos
     """
-    # Leer el archivo Excel
-    archivo_a_analizar = pd.ExcelFile(archivo_excel)
-    hojas_libro = archivo_a_analizar.sheet_names
-    df = None
-    for hoja in hojas_libro:
-        try:
-            df_temp = pd.read_excel(archivo_excel, sheet_name=hoja)
-            if not df_temp.empty:
-                df = df_temp
-                break
-        except ValueError:
-            continue
-    
-    # Si no se encuentra ninguna hoja con datos, levantar excepción:
-    if df is None:
-        raise ValueError("""No se encontraron hojas con datos en el archivo Excel.
-                         Es probable que el libro esté en blanco o las hojas no
-                         contengan el nombre correcto""")
-    
-    # Para extraer el día del muestreo
-
-    fecha_string = str(df['Fecha'].unique()[0])
-    fecha_lista = fecha_string.split()
+    # Leer el archivo Excel con context manager para asegurar cierre correcto
+    archivo_a_analizar = None
     try:
-        dia = int(fecha_lista[0].split("-")[2])
-    except:
-        dia_str = fecha_lista[0].split("-")[2]
-        dia = int(dia_str.split("T")[0])
-    
-    return dia
+        archivo_a_analizar = pd.ExcelFile(archivo_excel)
+        hojas_libro = archivo_a_analizar.sheet_names
+        df = None
+        for hoja in hojas_libro:
+            try:
+                # Usar el ExcelFile directamente sin abrir nuevas conexiones
+                df_temp = archivo_a_analizar.parse(hoja)
+                if not df_temp.empty:
+                    df = df_temp
+                    break
+            except ValueError:
+                continue
+        
+        # Si no se encuentra ninguna hoja con datos, levantar excepción:
+        if df is None:
+            raise ValueError("""No se encontraron hojas con datos en el archivo Excel.
+                             Es probable que el libro esté en blanco o las hojas no
+                             contengan el nombre correcto""")
+        
+        # Para extraer el día del muestreo
+        fecha_raw = df['Fecha'].unique()[0]
+        fecha_string = str(fecha_raw)
+        fecha_lista = fecha_string.split()
+        
+        try:
+            fecha_parte = fecha_lista[0].split("-")
+            dia = int(fecha_parte[2])
+        except:
+            dia_str = fecha_lista[0].split("-")[2]
+            dia = int(dia_str.split("T")[0])
+        
+        return dia
+    finally:
+        # Cerrar explícitamente el archivo Excel
+        if archivo_a_analizar is not None:
+            archivo_a_analizar.close()

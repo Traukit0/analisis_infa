@@ -76,7 +76,9 @@ def process_feature(feat: QgsFeature, transform: QgsCoordinateTransform,
         
         # Validar punto dentro del buffer
         punto_actual = geom.asPoint()
-        if not is_point_valid(punto_actual, punto_referencia):
+        distancia = obtener_distancia(punto_referencia, punto_actual, QgsCoordinateReferenceSystem(UTM_CRS))
+        
+        if not (0 < distancia < BUFFER_DISTANCE):
             return None
             
         # Procesar tiempo
@@ -84,51 +86,42 @@ def process_feature(feat: QgsFeature, transform: QgsCoordinateTransform,
         if not utc_time or utc_time == 'Null':
             return None
             
-        # Crear atributos
-        attrs = create_feature_attributes(utc_time, valor_utc, id_punto, feat)
+        # Crear atributos y verificar día
+        utc_time_str = utc_time.toString('yyyy-MM-dd HH:mm:ss')
+        utc_dt = datetime.strptime(utc_time_str, '%Y-%m-%d %H:%M:%S')
+        local_dt = utc_dt - timedelta(hours=valor_utc)
         
-        if attrs['dia_local'].day != dia_muestreo:
+        if local_dt.day != dia_muestreo:
             return None
+        
+        # Crear lista ordenada de atributos que coincida exactamente con get_field_definitions()
+        attributes = [
+            0,  # ID_track (String)
+            0,  # ID_Segm (String) 
+            id_punto,  # ID_Punto (Int)
+            feat.attribute('ele'),  # Elev (Double)
+            utc_time_str,  # UTC (String)
+            valor_utc,  # Ajuste (Int)
+            0,  # Rollover (Int)
+            local_dt.strftime('%Y/%m/%d %H:%M:%S'),  # Local (String)
+            local_dt.strftime('%Y/%m/%d'),  # Dia (String)
+            local_dt.strftime('%H:%M:%S'),  # Hora (String)
+            local_dt.strftime('%H:%M'),  # Name (String)
+            f"{local_dt.strftime('%Y/%m/%d %H:%M:%S')} (UTC-{valor_utc})",  # Descrip (String)
+            local_dt.strftime('%d/%m/%Y %H:%M:%S'),  # TimeStamp (String)
+            "Si",  # Mostrar (String)
+            "Si"   # Valido (String)
+        ]
             
         new_feat = QgsFeature()
         new_feat.setGeometry(geom)
-        new_feat.setAttributes(list(attrs.values()))
+        new_feat.setAttributes(attributes)
         
         return new_feat, id_punto + 1
         
     except Exception as e:
-        plugin_instance.mensajes_texto_plugin(f"Error procesando feature: {str(e)}")
+        plugin_instance.mensajes_texto_plugin(f"Error procesando feature {id_punto}: {str(e)}")
         return None
-
-def is_point_valid(punto_actual: QgsPointXY, punto_referencia: QgsPointXY) -> bool:
-    """Valida si un punto está dentro del buffer permitido."""
-    distancia = obtener_distancia(punto_referencia, punto_actual, QgsCoordinateReferenceSystem(UTM_CRS))
-    return 0 < distancia < BUFFER_DISTANCE
-
-def create_feature_attributes(utc_time: str, valor_utc: int, id_punto: int, feat: QgsFeature) -> Dict:
-    """Crea los atributos para una nueva característica."""
-    utc_time_str = utc_time.toString('yyyy-MM-dd HH:mm:ss')
-    utc_dt = datetime.strptime(utc_time_str, '%Y-%m-%d %H:%M:%S')
-    local_dt = utc_dt - timedelta(hours=valor_utc)
-    
-    return {
-        'id_track': 0,
-        'id_segm': 0,
-        'id_punto': id_punto,
-        'elev': feat.attribute('ele'),
-        'utc_time_str': utc_time_str,
-        'ajuste': valor_utc,
-        'rollover': 0,
-        'local_time': local_dt.strftime('%Y/%m/%d %H:%M:%S'),
-        'dia': local_dt.strftime('%Y/%m/%d'),
-        'hora': local_dt.strftime('%H:%M:%S'),
-        'name': local_dt.strftime('%H:%M'),
-        'descrip': f"{local_dt.strftime('%Y/%m/%d %H:%M:%S')} (UTC-{valor_utc})",
-        'TimeStamp': local_dt.strftime('%d/%m/%Y %H:%M:%S'),
-        'mostrar': "Si",
-        'Valido': "Si",
-        'dia_local': local_dt
-    }
 
 def extraer_track_points(gpx_path: str, archivo_excel: str, 
                         directorio_salida_shp: str, 
@@ -180,7 +173,7 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
         geom_referencia = carac_referencia.geometry()
         geom_referencia.transform(transform_ref)
         punto_referencia = geom_referencia.asPoint()
-
+        
         # Cargar la capa GPX, acá estaba el queso de porque no funcionaba... no ocupar 'uri'
         capa_gpx = QgsVectorLayer(f"{gpx_path}|layername=track_points", "Track Points", "ogr")
         if not capa_gpx.isValid():
@@ -198,21 +191,20 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
         # Definir los campos adicionales
         campos_adicionales = get_field_definitions()
 
-        hay_puntos_track = False # bandera para asegurar que la capa no esté vacía
-
         # Crear la lista de características transformadas
         features = []
         id_punto = 0
         dia_muestreo = obtener_dia_muestreo(archivo_excel)
+        
         for feat in capa_gpx.getFeatures():
-            hay_puntos_track = True
             result = process_feature(feat, transform, punto_referencia, valor_utc, dia_muestreo, id_punto, plugin_instance)
             if result:
                 new_feat, id_punto = result
                 features.append(new_feat)
 
-        if not hay_puntos_track:
-            mensaje = "\nNo se encontraron puntos de track en el archivo GPX. No se genera SHP ni KMZ"
+        # Verificar si se generaron features válidas después del filtrado
+        if not features:
+            mensaje = "\nNo se encontraron puntos de track válidos después del filtrado. No se genera SHP ni KMZ"
             plugin_instance.mensajes_texto_plugin(mensaje)
             return
 
@@ -245,14 +237,19 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
         # Normalizar nuevamente la ruta final del archivo
         nombre_archivo_shp = os.path.normpath(f"{directorio_salida_shp}{nombre_archivo} Track Ptos.shp")
 
-        QgsVectorFileWriter.writeAsVectorFormatV3(
+        result = QgsVectorFileWriter.writeAsVectorFormatV3(
             output_layer,
             nombre_archivo_shp,
             transform_context,
             options
         )
 
-        plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_archivo} Track Ptos.shp creado")
+        # Verificar resultado de la escritura
+        if result[0] != QgsVectorFileWriter.NoError:
+            plugin_instance.mensajes_texto_plugin(f"Error al escribir archivo SHP: {result[1]}")
+            return None
+
+        plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_archivo} Track Ptos.shp creado exitosamente")
 
         # Lógica añadida para cargar capa .shp directamente a QGIS
         layer = QgsVectorLayer(nombre_archivo_shp, f"{nombre_archivo} Track Ptos.shp", "ogr")
