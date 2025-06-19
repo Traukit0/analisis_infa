@@ -58,12 +58,17 @@ def process_point_features(layer: QgsVectorLayer) -> List[QgsFeature]:
     return puntos
 
 def create_segment_feature(puntos: List[QgsPoint], i: int, features: List[QgsFeature], 
-                         crs: QgsCoordinateReferenceSystem) -> Tuple[QgsFeature, Dict]:
+                         crs: QgsCoordinateReferenceSystem) -> Optional[Tuple[QgsFeature, Dict]]:
     """Crea una característica de segmento con sus atributos."""
     f = QgsFeature()
     f.setGeometry(QgsGeometry.fromPolyline([puntos[i], puntos[i + 1]]))
     
     distancia_entre_puntos = obtener_distancia(puntos[i], puntos[i + 1], crs)
+    
+    # Verificar si la distancia es cero para evitar división por cero
+    if distancia_entre_puntos == 0:
+        return None
+    
     tiempo_entre_puntos = obtener_segundos(features[i]["Hora"], features[i+1]["Hora"])
     
     km_hr_valor = round(km_h(distancia_entre_puntos, tiempo_entre_puntos), 2)
@@ -158,11 +163,20 @@ def crear_segmentos_track(archivo_excel: str, directorio_salida_shp: str,
         puntos = process_point_features(layer)
         
         # Crear segmentos
+        segmentos_omitidos = 0
         for i in range(len(puntos) - 1):
-            feature, _ = create_segment_feature(puntos, i, 
+            resultado = create_segment_feature(puntos, i, 
                                              sorted(layer.getFeatures(), key=lambda f: f["Hora"]), 
                                              layer.crs())
+            if resultado is None:
+                segmentos_omitidos += 1
+                continue
+            feature, _ = resultado
             output_layer_data_provider.addFeature(feature)
+        
+        # Informar sobre segmentos omitidos si los hay
+        if segmentos_omitidos > 0:
+            plugin_instance.mensajes_texto_plugin(f"Se omitieron {segmentos_omitidos} segmentos con distancia cero (puntos duplicados)")
 
         # Guardar archivo SHP
         nombre_archivo = f'{nombrar_archivo(archivo_excel)} Track Segmentos.shp'
