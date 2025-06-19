@@ -193,6 +193,8 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
 
         # Crear la lista de características transformadas
         features = []
+        coordenadas_procesadas = set()  # Set para almacenar coordenadas ya procesadas
+        puntos_omitidos = 0
         id_punto = 0
         dia_muestreo = obtener_dia_muestreo(archivo_excel)
         
@@ -200,7 +202,23 @@ def extraer_track_points(gpx_path: str, archivo_excel: str,
             result = process_feature(feat, transform, punto_referencia, valor_utc, dia_muestreo, id_punto, plugin_instance)
             if result:
                 new_feat, id_punto = result
+                
+                # Verificar si las coordenadas ya existen
+                geom = new_feat.geometry()
+                point = geom.asPoint()
+                coordenadas = (round(point.x(), 6), round(point.y(), 6))  # Redondear para evitar problemas de precisión
+                
+                if coordenadas in coordenadas_procesadas:
+                    puntos_omitidos += 1
+                    continue
+                
+                # Agregar coordenadas al set y feature a la lista
+                coordenadas_procesadas.add(coordenadas)
                 features.append(new_feat)
+        
+        # Informar sobre puntos omitidos si los hay
+        if puntos_omitidos > 0:
+            plugin_instance.mensajes_texto_plugin(f"Se omitieron {puntos_omitidos} puntos duplicados (coordenadas idénticas)")
 
         # Verificar si se generaron features válidas después del filtrado
         if not features:
