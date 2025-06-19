@@ -79,58 +79,9 @@ El plugin incluye varios módulos especializados:
 - Mejoras en la validación de datos y manejo de errores
 - Implementación de generación automática de informes PDF
 
-## Changelog
+## Historial de cambios
 
-### Versión 1.2 - 23 de enero de 2025
-
-#### 🔧 Correcciones Críticas
-- **Solucionado**: Archivos de track (puntos y segmentos) se generaban vacíos
-- **Causa identificada**: Desalineamiento entre campos definidos (15) y valores asignados (16) en tabla de atributos
-- **Corrección**: Reestructurada función `create_feature_attributes()` para alineamiento exacto de campos
-
-#### 🛠️ Mejoras en Gestión de Archivos
-- **Implementado**: Context manager para archivos Excel en `utils.py`
-- **Solucionado**: ResourceWarnings por archivos Excel no cerrados correctamente
-- **Aplicado a**: Funciones `nombrar_archivo()` y `obtener_dia_muestreo()`
-- **Resultado**: Eliminación completa de memory leaks relacionados con archivos Excel
-
-#### 🎯 Validaciones Robustas
-- **Mejorado**: Sistema de validación de features en procesamiento de tracks
-- **Agregado**: Verificación de existencia y contenido de archivos dependientes
-- **Implementado**: Validación de que efectivamente se generaron features válidas (no solo que existían en el GPX original)
-- **Beneficio**: Prevención de archivos SHP aparentemente exitosos pero vacíos
-
-#### 🔍 Gestión de Dependencias
-- **Corregido**: `segmentos_track.py` ahora verifica existencia del archivo de puntos antes de procesarlo
-- **Agregado**: Validación de que el archivo de puntos contiene datos antes de generar segmentos
-- **Implementado**: Mensajes informativos sobre el estado de archivos dependientes
-
-#### 📊 Optimizaciones de Rendimiento
-- **Eliminado**: Parsing múltiple de archivos Excel (se usaba `pd.read_excel()` en lugar de `ExcelFile.parse()`)
-- **Optimizado**: Reutilización de conexiones a archivos Excel
-- **Resultado**: Reducción significativa del tiempo de procesamiento para archivos grandes
-
-#### 🐛 Corrección de Errores de Filtrado
-- **Identificado**: Problema con filtrado por día de muestreo causaba rechazo de todos los puntos
-- **Mejorado**: Manejo más robusto de formatos de fecha en archivos Excel
-- **Agregado**: Validación de consistencia entre fecha del Excel y timestamps del GPX
-
-#### ⚡ Mejoras en Experiencia de Usuario
-- **Eliminado**: Mensajes de debugging excesivos que saturaban la consola
-- **Conservado**: Mensajes informativos esenciales sobre el progreso del procesamiento
-- **Mejorado**: Claridad en mensajes de error cuando no se encuentran datos válidos
-
-#### 🔄 Refactoring de Código
-- **Simplificado**: Función `process_feature()` para mejor legibilidad y mantenimiento
-- **Eliminado**: Funciones obsoletas (`is_point_valid()`, versión anterior de `create_feature_attributes()`)
-- **Mejorado**: Documentación inline y estructura de funciones
-- **Eliminado**: llamados a print e ET.tree en wpt_gpx.py que se utilizaba para debugging, ya no era necesario.
-
-#### 📈 Impacto de las Mejoras
-- **Antes**: 468 features procesadas → 0 features válidas (archivos vacíos)
-- **Después**: 468 features procesadas → 432 features válidas (archivos funcionales)
-- **Resultado**: Plugin completamente funcional para procesamiento de tracks GPS
-- **Beneficio**: Generación exitosa de todos los productos geoespaciales requeridos
+Para ver el historial completo de cambios, mejoras y correcciones, consulte el [CHANGELOG.md](./CHANGELOG.md).
 
 ## Información legal y técnica
 
