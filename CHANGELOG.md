@@ -7,16 +7,25 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [No publicado] - 2025-01-23
 
+### 🚀 Nuevas Características
+- **Batimetría**: Exportación de múltiples archivos KMZ por valor de `Fuente`. Cada grupo se exporta con nombre `Batimetria_YYYY.kmz` cuando el año está presente en el texto de `Fuente`; en caso contrario, se usa una versión saneada del valor.
+
 ### 🔧 Correcciones
 - **Solucionado**: Error de división por cero en procesamiento de segmentos de track cuando existen puntos duplicados
-- **Implementado**: Filtrado automático de puntos duplicados con distancia cero
-- **Mejorado**: Sistema de información sobre segmentos omitidos por duplicación
-- **Resultado**: El plugin ya no falla al procesar tracks con puntos GPS duplicados
+- **Solucionado**: Puntos GPS duplicados causaban archivos shapefile con información redundante
+- **Implementado**: Filtrado automático de puntos duplicados con distancia cero en segmentos
+- **Implementado**: Filtrado automático de puntos con coordenadas idénticas en puntos de track
+- **Mejorado**: Sistema de información sobre elementos omitidos por duplicación
+- **Resultado**: El plugin ya no falla al procesar tracks con puntos GPS duplicados y genera archivos más limpios
 
 ### 🛠️ Mejoras Técnicas
-- **Modificado**: Función `create_segment_feature()` ahora retorna `None` para segmentos con distancia cero
-- **Agregado**: Contador de segmentos omitidos por duplicación
-- **Implementado**: Mensajes informativos sobre puntos duplicados eliminados
+- **UI**: El selector de “Archivo Batimetría (.shp)” ahora restringe la búsqueda a archivos con extensión `.shp` únicamente.
+- **Modificado**: Función `create_segment_feature()` en `segmentos_track.py` ahora retorna `None` para segmentos con distancia cero
+- **Implementado**: Sistema de filtrado de coordenadas duplicadas en `puntos_track_gpx.py` usando set para búsquedas eficientes
+- **Agregado**: Contador de segmentos omitidos por duplicación en procesamiento de segmentos
+- **Agregado**: Contador de puntos omitidos por coordenadas idénticas en procesamiento de puntos
+- **Implementado**: Mensajes informativos sobre elementos duplicados eliminados en ambos módulos
+- **Optimizado**: Verificación de duplicados con precisión de 6 decimales para evitar falsos positivos por precisión flotante
 
 ## [1.2] - 2025-01-23
 

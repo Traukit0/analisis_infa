@@ -202,6 +202,11 @@ class AnalisisInfa:
         if self.first_start:
             self.first_start = False
             self.dlg = AnalisisInfaDialog()
+            # Restringir selector de Batimetría a archivos .shp
+            try:
+                self.dlg.batiFileWidget.setFilter("Shapefile (*.shp)")
+            except Exception:
+                pass
         # Conectar el combobox al método para capturar su valor
         self.dlg.utcComboBox.currentIndexChanged.connect(self.capturar_utc_offset)
         # Conectar el widget del boton al método correspondiente

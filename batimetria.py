@@ -8,6 +8,7 @@ from pathlib import Path
 import zipfile
 import os
 import shutil
+import re
 from qgis.core import (
     QgsVectorLayer,
     QgsProject,
@@ -166,29 +167,50 @@ def batimetria_kmz(batimetria_shp, directorio_salida_kmz, plugin_instance):
     dest_crs = QgsCoordinateReferenceSystem("EPSG:4326")
     transform = QgsCoordinateTransform(source_crs, dest_crs, QgsProject.instance())
 
-    # Generar placemarks
-    placemarks = []
-    for idx, feat in enumerate(layer.getFeatures(), 1):
-        coords = feat.geometry().asMultiPolyline()
-        placemark = crear_placemark(feat, coords, transform, idx, schema)
-        placemarks.append(placemark)
+    # Agrupar entidades por valor de 'Fuente'
+    grupos_por_fuente = {}
+    for feat in layer.getFeatures():
+        valor_fuente = feat[schema['fuente']]
+        clave = str(valor_fuente) if valor_fuente is not None else "SIN_FUENTE"
+        grupos_por_fuente.setdefault(clave, []).append(feat)
 
-    # Crear contenido KML
-    kml_content = get_kml_base().format(
-        nombre="Batimetria",
-        placemarks='\n'.join(placemarks)
-    )
-
-    # Crear archivo KMZ
+    # Asegurar directorio de salida
     directorio_salida = Path(directorio_salida_kmz)
-    kmz_path = directorio_salida / "Batimetria.kmz"
-    
     try:
-        with zipfile.ZipFile(kmz_path, 'w', zipfile.ZIP_DEFLATED) as kmz:
-            kmz.writestr("doc.kml", kml_content)
-        plugin_instance.mensajes_texto_plugin(f"Archivo Batimetria.kmz creado")
-    except Exception as e:
-        plugin_instance.mensajes_texto_plugin(f"Error creando KMZ: {str(e)}")
+        directorio_salida.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+
+    # Exportar un KMZ por cada grupo de 'Fuente'
+    for fuente_valor, features in grupos_por_fuente.items():
+        placemarks = []
+        for idx, feat in enumerate(features, 1):
+            coords = feat.geometry().asMultiPolyline()
+            placemark = crear_placemark(feat, coords, transform, idx, schema)
+            placemarks.append(placemark)
+
+        kml_content = get_kml_base().format(
+            nombre=f"Batimetria {fuente_valor}",
+            placemarks='\n'.join(placemarks)
+        )
+
+        # Determinar nombre de archivo con año si está presente
+        match = re.search(r'(19|20)\d{2}', str(fuente_valor))
+        if match:
+            anio = match.group(0)
+            nombre_archivo = f"Batimetria_{anio}.kmz"
+        else:
+            seguro = ''.join(c if c.isalnum() else '_' for c in str(fuente_valor)).strip('_')
+            nombre_archivo = f"Batimetria_{seguro}.kmz"
+
+        kmz_path = directorio_salida / nombre_archivo
+
+        try:
+            with zipfile.ZipFile(kmz_path, 'w', zipfile.ZIP_DEFLATED) as kmz:
+                kmz.writestr("doc.kml", kml_content)
+            plugin_instance.mensajes_texto_plugin(f"Archivo {nombre_archivo} creado")
+        except Exception as e:
+            plugin_instance.mensajes_texto_plugin(f"Error creando KMZ '{nombre_archivo}': {str(e)}")
 
 def get_kml_base():
     """Retorna la plantilla base del KML"""
