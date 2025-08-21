@@ -20,6 +20,9 @@ y este proyecto adhiere al [Versionado Semántico](https://semver.org/lang/es/).
 
 ### 🛠️ Mejoras Técnicas
 - **UI**: El selector de “Archivo Batimetría (.shp)” ahora restringe la búsqueda a archivos con extensión `.shp` únicamente.
+- **Waypoints GPX**: Parseo único del archivo GPX para construir diccionario `name→time` y consultas O(1).
+- **Waypoints GPX**: Inclusión de puntos sin `<time>`; ahora se clasifican como "Otros" y se exportan (no se descartan).
+- **Waypoints GPX**: Nueva jerarquía de clasificación: 1) altura si discrimina (>0 vs 0/ausente), 2) nombre (empieza con número→Terreno; letra→Otro), 3) `sym` (Waypoint→Terreno; Flag→Otro). Solo se marca "Terreno" si el waypoint tiene `<time>`.
 - **Modificado**: Función `create_segment_feature()` en `segmentos_track.py` ahora retorna `None` para segmentos con distancia cero
 - **Implementado**: Sistema de filtrado de coordenadas duplicadas en `puntos_track_gpx.py` usando set para búsquedas eficientes
 - **Agregado**: Contador de segmentos omitidos por duplicación en procesamiento de segmentos

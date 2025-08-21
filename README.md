@@ -87,7 +87,7 @@ Para ver el historial completo de cambios, mejoras y correcciones, consulte el [
 
 - **Autor**: Manuel Eduardo Cano Nesbet
 - **Licencia**: GNU General Public License v2
-- **Versión actual**: 1.2
+- **Versión actual**: 1.3
 - **Contacto**: mcano@sernapesca.cl
 - **Repositorio**: [https://github.com/Traukit0/analisis_infa](https://github.com/Traukit0/analisis_infa)
 

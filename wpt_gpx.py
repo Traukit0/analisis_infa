@@ -29,6 +29,42 @@ from qgis.core import (
     QgsCoordinateTransformContext,
 )
 
+def _parse_gpx_times(gpx_path: str):
+    """Parsea el GPX una sola vez y retorna dict {name: datetime_utc}.
+    Si hay nombres duplicados, conserva el primero."""
+    name_to_time = {}
+    try:
+        with open(gpx_path, 'rb') as archivo_gpx:
+            tree = ET.parse(archivo_gpx)
+        root = tree.getroot()
+        ns = {'gpx': 'http://www.topografix.com/GPX/1/1'}
+        for wpt in root.findall('.//gpx:wpt', namespaces=ns):
+            name_el = wpt.find('gpx:name', namespaces=ns)
+            time_el = wpt.find('gpx:time', namespaces=ns)
+            if name_el is None or time_el is None:
+                continue
+            name = name_el.text
+            try:
+                dt = datetime.strptime(time_el.text, '%Y-%m-%dT%H:%M:%SZ')
+            except Exception:
+                continue
+            if name not in name_to_time:
+                name_to_time[name] = dt
+    except Exception:
+        pass
+    return name_to_time
+
+
+def _get_field_safe(feature, field_name, default=None):
+    try:
+        idx = feature.fields().indexFromName(field_name)
+        if idx != -1:
+            return feature[field_name]
+    except Exception:
+        return default
+    return default
+
+
 def extraer_waypoints(gpx_path, archivo_excel, directorio_salida_shp, directorio_salida_kmz, valor_utc, plugin_instance):
     '''
     Función para extraer Waypoints desde un archivo GPX.
@@ -72,90 +108,105 @@ def extraer_waypoints(gpx_path, archivo_excel, directorio_salida_shp, directorio
 
     features = []
     fid = 1
+    # Parsear GPX una sola vez para obtener un dict {name: datetime_utc}
+    name_to_time = _parse_gpx_times(gpx_path)
+
+    # Primera pasada: evaluar si podemos discriminar por altura o por nombre o por sym
+    elev_pos = 0
+    elev_zero_or_missing = 0
+    name_digit = 0
+    name_letter = 0
+    sym_flag = 0
+    sym_waypoint = 0
+    for f in capa_gpx.getFeatures():
+        elev_val = f['elevation'] if 'elevation' in [fld.name() for fld in f.fields()] else _get_field_safe(f, 'elevation')
+        if elev_val is None or float(elev_val) == 0.0:
+            elev_zero_or_missing += 1
+        else:
+            try:
+                elev_pos += 1 if float(elev_val) > 0 else 0
+            except Exception:
+                elev_zero_or_missing += 1
+        nm = f['name']
+        if nm and len(nm) > 0:
+            if nm[0].isdigit():
+                name_digit += 1
+            elif nm[0].isalpha():
+                name_letter += 1
+        sym_val = _get_field_safe(f, 'sym', '')
+        if isinstance(sym_val, str):
+            low = sym_val.lower()
+            if low == 'flag':
+                sym_flag += 1
+            elif low == 'waypoint':
+                sym_waypoint += 1
+
+    if elev_pos > 0 and elev_zero_or_missing > 0:
+        classification_mode = 'by_elevation'
+    elif name_digit > 0 and name_letter > 0:
+        classification_mode = 'by_name'
+    elif sym_flag > 0 and sym_waypoint > 0:
+        classification_mode = 'by_sym'
+    else:
+        classification_mode = 'fallback'
+
+    # Segunda pasada: construir features con clasificación
     for feat in capa_gpx.getFeatures():
         geom = feat.geometry()
         geom.transform(transform)
 
         wpt = feat['name']
         elevation = feat['elevation']
-        
-        # Intentar obtener el tiempo desde el archivo GPX original
-        with open(gpx_path, 'rb') as archivo_gpx:
-            tree = ET.parse(archivo_gpx)        
-        root = tree.getroot()
-        
-        # Buscar el waypoint correspondiente por nombre
-        ns = {'gpx': 'http://www.topografix.com/GPX/1/1'}
-        wpt_xml = root.find(f".//gpx:wpt/[gpx:name='{wpt}']/gpx:time", namespaces=ns)
-        
-        if wpt_xml is not None:
-            utc_time_str = wpt_xml.text
-            # Convertir el formato ISO a datetime
-            utc_dt = datetime.strptime(utc_time_str, '%Y-%m-%dT%H:%M:%SZ')
-        else:
-            mensaje = f"\nwpt_gpx.extraer_waypoints: No se encontró tiempo para el waypoint {wpt}"
-            plugin_instance.mensajes_texto_plugin(mensaje)
-            continue
+        sym_val = _get_field_safe(feat, 'sym', '')
 
-        local_dt = utc_dt - timedelta(hours=valor_utc)
-        local_time = local_dt.strftime('%Y/%m/%d %H:%M:%S')
-        dia = local_dt.strftime('%Y/%m/%d')
-        hora = local_dt.strftime('%H:%M:%S')
-        hora_sec = local_dt.strftime('%H:%M')
+        # Tiempo desde el dict (si no existe, mantendremos el punto pero como 'Otro')
+        utc_dt = name_to_time.get(wpt)
+        if utc_dt is not None:
+            utc_time_str = utc_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+            local_dt = utc_dt - timedelta(hours=valor_utc)
+            local_time = local_dt.strftime('%Y/%m/%d %H:%M:%S')
+            dia = local_dt.strftime('%Y/%m/%d')
+            hora = local_dt.strftime('%H:%M:%S')
+            hora_sec = local_dt.strftime('%H:%M')
+            TimeStamp = local_dt.strftime('%d/%m/%Y %H:%M:%S')
+        else:
+            utc_time_str = ''
+            local_time = ''
+            dia = ''
+            hora = ''
+            hora_sec = ''
+            TimeStamp = ''
 
         Wp_Com = None
         Wp_Desc = None
         ajuste = valor_utc
         rollover = 0
-        name_hora = f"{wpt} ({hora_sec})"
-        descrip = f"{local_time} (UTC-{valor_utc})"
-        TimeStamp = local_dt.strftime('%d/%m/%Y %H:%M:%S')
+        name_hora = f"{wpt} ({hora_sec})" if hora_sec else wpt
+        descrip = f"{local_time} (UTC-{valor_utc})" if local_time else ''
         mostrar = "Si"
 
-        # Bloque de lógica para discriminar puntos entre los escenarios posibles
-        # Recordar que no todos los escenarios están cubiertos, siempre habrán algunos
-        # Que escapen a esta lógica.
-        def is_terreno_waypoint(wpt_name: str, elevation: float = None) -> bool:
-            """
-            Determina si un waypoint es de terreno basado en múltiples criterios
-            
-            Criterios para puntos de terreno:
-            - Debe tener elevación (principal indicador)
-            - El nombre debe ser numérico o seguir patrones específicos
-            - No debe comenzar con prefijos típicos de puntos precargados
-            """
-            # Lista de prefijos comunes para puntos precargados
-            prefijos_otros = ['A', 'B', 'C', 'P', 'EST', 'E', 'REF', 'R']
-            
-            # Si no hay elevación, probablemente no es punto de terreno
-            if elevation is None:
-                return False
-                
-            # Verificar si el nombre comienza con algún prefijo de puntos precargados
-            for prefijo in prefijos_otros:
-                if wpt_name.upper().startswith(prefijo):
-                    # Si tiene un prefijo conocido y números, es un punto precargado
-                    if any(char.isdigit() for char in wpt_name[len(prefijo):]):
-                        return False
-            
-            # Verificar si es puramente numérico
-            if wpt_name.isdigit():
-                return True
-                
-            # Verificar patrones específicos de puntos de terreno
-            # Por ejemplo: "123A", "456B" - números seguidos de una letra
-            if len(wpt_name) > 1:
-                base = wpt_name[:-1]
-                suffix = wpt_name[-1]
-                if base.isdigit() and suffix.isalpha():
-                    return True
-            
-            # Por defecto, si tiene elevación pero no cumple los patrones anteriores,
-            # se considera punto precargado
-            return False
+        # Clasificación por etapas, solo 'Terreno' si existe tiempo
+        def starts_with_digit(text):
+            return bool(text) and text[0].isdigit()
 
-        # Reemplazar el bloque existente de discriminación de puntos con esta nueva lógica
-        clase = 'Terreno' if is_terreno_waypoint(wpt, elevation) else 'Otro'
+        if utc_dt is None:
+            clase = 'Otro'
+        else:
+            if classification_mode == 'by_elevation':
+                try:
+                    clase = 'Terreno' if (elevation is not None and float(elevation) > 0.0) else 'Otro'
+                except Exception:
+                    clase = 'Otro'
+            elif classification_mode == 'by_name':
+                clase = 'Terreno' if starts_with_digit(wpt) else 'Otro'
+            elif classification_mode == 'by_sym':
+                clase = 'Terreno' if isinstance(sym_val, str) and sym_val.lower() == 'waypoint' else 'Otro'
+            else:
+                # Fallback sencillo
+                try:
+                    clase = 'Terreno' if (elevation is not None and float(elevation) > 0.0) else ('Terreno' if starts_with_digit(wpt) else 'Otro')
+                except Exception:
+                    clase = 'Terreno' if starts_with_digit(wpt) else 'Otro'
 
         new_feat = QgsFeature()
         new_feat.setGeometry(geom)
