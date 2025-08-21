@@ -207,6 +207,21 @@ class AnalisisInfa:
                 self.dlg.batiFileWidget.setFilter("Shapefile (*.shp)")
             except Exception:
                 pass
+            # Restringir selector de Excel a archivos .xlsx
+            try:
+                self.dlg.excelFileWidget.setFilter("Excel (*.xlsx)")
+            except Exception:
+                pass
+            # Restringir selector de GPX a archivos .gpx
+            try:
+                self.dlg.gpxFileWidget.setFilter("GPX (*.gpx)")
+            except Exception:
+                pass
+            # Conectar botón Resetear
+            try:
+                self.dlg.resetButton.clicked.connect(self.resetear_plugin)
+            except Exception:
+                pass
         # Conectar el combobox al método para capturar su valor
         self.dlg.utcComboBox.currentIndexChanged.connect(self.capturar_utc_offset)
         # Conectar el widget del boton al método correspondiente
@@ -291,6 +306,43 @@ class AnalisisInfa:
 
         # Resetear los campos de entrada
         self.resetear_campos()
+
+    def resetear_plugin(self):
+        """Limpia por completo la interfaz del plugin."""
+        try:
+            self.dlg.textEdit.clear()
+        except Exception:
+            pass
+        try:
+            self.dlg.progressBar.setValue(0)
+        except Exception:
+            pass
+        try:
+            # Restablecer selección de UTC
+            self.dlg.utcComboBox.setCurrentIndex(0)
+            self.utc_offset = None
+        except Exception:
+            pass
+        # Limpiar widgets de archivo/directorio
+        self.resetear_campos()
+        # Cerrar y reabrir el diálogo para un reinicio visual completo
+        try:
+            self.dlg.close()
+        except Exception:
+            pass
+        try:
+            self.dlg = AnalisisInfaDialog()
+            try:
+                self.dlg.batiFileWidget.setFilter("Shapefile (*.shp)")
+            except Exception:
+                pass
+            self.dlg.utcComboBox.currentIndexChanged.connect(self.capturar_utc_offset)
+            self.dlg.procesarButton.clicked.connect(self.procesar)
+            self.dlg.resetButton.clicked.connect(self.resetear_plugin)
+            self.dlg.show()
+            self.dlg.exec_()
+        except Exception:
+            pass
 
     def procesar_ccaa(self, excel_path, directorio_salida_shp, directorio_salida_kmz):
         ccaa.ccaa_a_kmz(excel_path, directorio_salida_shp, directorio_salida_kmz, self)

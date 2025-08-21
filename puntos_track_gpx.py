@@ -33,7 +33,7 @@ from qgis.core import (
 )
 
 # Constantes
-BUFFER_DISTANCE = 1500  # metros
+BUFFER_DISTANCE = 1000  # metros
 UTM_CRS = 'EPSG:32718'
 WGS84_CRS = 'EPSG:4326'
 MESES = {
